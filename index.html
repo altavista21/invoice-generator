@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>InvoicePro — Generator Invoice Profesional</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="#main" class="skip-link">Lewati ke konten utama</a>
+
+    <header class="app-header" role="banner">
+        <div class="header-inner">
+            <div class="header-brand">
+                <div class="brand-icon" aria-hidden="true">
+                    <i data-lucide="file-text"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>InvoicePro</h1>
+                    <span class="brand-tagline">Generator Invoice</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" aria-label="Toggle tema gelap/terang" title="Tema">
+                    <i data-lucide="sun" class="icon-sun"></i>
+                    <i data-lucide="moon" class="icon-moon"></i>
+                </button>
+                <button class="icon-btn" id="sidebarToggle" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+
+        <nav class="mobile-tabs" id="mobileTabs" role="tablist" aria-label="Navigasi utama">
+            <button class="mobile-tab active" role="tab" aria-selected="true" data-tab="editor" id="tab-editor">
+                <i data-lucide="edit-3"></i>
+                <span>Editor</span>
+            </button>
+            <button class="mobile-tab" role="tab" aria-selected="false" data-tab="preview" id="tab-preview">
+                <i data-lucide="eye"></i>
+                <span>Preview</span>
+            </button>
+            <button class="mobile-tab" role="tab" aria-selected="false" data-tab="settings" id="tab-settings">
+                <i data-lucide="settings"></i>
+                <span>Pengaturan</span>
+            </button>
+        </nav>
+    </header>
+
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menu samping">
+            <nav class="sidebar-nav">
+                <button class="sidebar-item active" data-tab="editor" aria-current="true">
+                    <i data-lucide="edit-3"></i>
+                    <span>Editor</span>
+                </button>
+                <button class="sidebar-item" data-tab="preview">
+                    <i data-lucide="eye"></i>
+                    <span>Preview</span>
+                </button>
+                <button class="sidebar-item" data-tab="settings">
+                    <i data-lucide="settings"></i>
+                    <span>Pengaturan</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="icon-btn" id="sidebarThemeToggle" aria-label="Toggle tema">
+                    <i data-lucide="sun" class="icon-sun"></i>
+                    <i data-lucide="moon" class="icon-moon"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+        <main id="main" class="main-content" role="main">
+            <!-- EDITOR TAB -->
+            <section class="tab-panel active" id="editorTab" role="tabpanel" aria-labelledby="tab-editor">
+                <div class="editor-header-sticky">
+                    <div class="editor-header-inner">
+                        <div>
+                            <h2>Buat Invoice Baru</h2>
+                            <p class="editor-subtitle">Isi form di bawah, preview update otomatis</p>
+                        </div>
+                        <div class="editor-header-actions">
+                            <button class="btn btn-ghost" id="btnPrint" title="Print (Ctrl+P)">
+                                <i data-lucide="printer"></i>
+                            </button>
+                            <button class="btn btn-primary" id="btnDownloadPDF" title="Download PDF (Ctrl+S)">
+                                <i data-lucide="download"></i>
+                                <span>PDF</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="editor-content">
+                    <!-- Business Info Card -->
+                    <article class="card" data-section="business">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="building-2"></i>
+                                </div>
+                                <div>
+                                    <h3>Informasi Bisnis</h3>
+                                    <p class="card-subtitle">Data pengirim invoice</p>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="form-field logo-field">
+                                <label for="businessLogo" class="form-label">Logo Bisnis</label>
+                                <div class="logo-upload" role="button" tabindex="0" aria-label="Upload logo bisnis">
+                                    <img id="logoPreview" class="logo-img" src="" alt="Logo bisnis" hidden>
+                                    <div id="logoPlaceholder" class="logo-placeholder">
+                                        <i data-lucide="image"></i>
+                                        <span>Tap untuk upload logo</span>
+                                        <span class="hint">PNG/JPG, max 2MB</span>
+                                    </div>
+                                    <input type="file" id="businessLogo" accept="image/*" hidden>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="businessName" class="form-label">Nama Bisnis <span class="required" aria-hidden="true">*</span></label>
+                                <input type="text" id="businessName" class="form-input" placeholder="Nama bisnis Anda" required autocomplete="organization">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="businessAddress" class="form-label">Alamat Lengkap</label>
+                                <textarea id="businessAddress" class="form-input form-textarea" rows="2" placeholder="Jl. Nama Jalan, Kota, Provinsi, Kode Pos" autocomplete="street-address"></textarea>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="businessEmail" class="form-label">Email</label>
+                                    <input type="email" id="businessEmail" class="form-input" placeholder="email@bisnis.com" autocomplete="email">
+                                </div>
+                                <div class="form-field">
+                                    <label for="businessPhone" class="form-label">Telepon</label>
+                                    <input type="tel" id="businessPhone" class="form-input" placeholder="+62 xxx xxxx xxxx" autocomplete="tel">
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Invoice Info Card -->
+                    <article class="card" data-section="invoice">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="hash"></i>
+                                </div>
+                                <div>
+                                    <h3>Informasi Invoice</h3>
+                                    <p class="card-subtitle">Detail nomor & tanggal</p>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="invoiceNumber" class="form-label">Nomor Invoice <span class="required" aria-hidden="true">*</span></label>
+                                    <input type="text" id="invoiceNumber" class="form-input" placeholder="INV-20260927-001" required>
+                                </div>
+                                <div class="form-field">
+                                    <label for="invoiceDate" class="form-label">Tanggal Invoice <span class="required" aria-hidden="true">*</span></label>
+                                    <input type="date" id="invoiceDate" class="form-input" required>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="dueDate" class="form-label">Jatuh Tempo <span class="required" aria-hidden="true">*</span></label>
+                                    <input type="date" id="dueDate" class="form-input" required>
+                                </div>
+                                <div class="form-field">
+                                    <label for="currency" class="form-label">Mata Uang</label>
+                                    <select id="currency" class="form-input form-select">
+                                        <option value="IDR">IDR — Rupiah</option>
+                                        <option value="USD">USD — Dollar AS</option>
+                                        <option value="EUR">EUR — Euro</option>
+                                        <option value="SGD">SGD — Dollar SG</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="invoiceStatus" class="form-label">Status Invoice</label>
+                                <div class="status-picker" role="radiogroup" aria-label="Pilih status invoice">
+                                    <label class="status-option" data-status="draft">
+                                        <input type="radio" name="invoiceStatus" value="draft" id="statusDraft" hidden>
+                                        <span class="status-badge status-draft">
+                                            <i data-lucide="file-text"></i>
+                                            Draft
+                                        </span>
+                                    </label>
+                                    <label class="status-option" data-status="unpaid">
+                                        <input type="radio" name="invoiceStatus" value="unpaid" id="statusUnpaid" hidden>
+                                        <span class="status-badge status-unpaid">
+                                            <i data-lucide="alert-triangle"></i>
+                                            Unpaid
+                                        </span>
+                                    </label>
+                                    <label class="status-option" data-status="paid">
+                                        <input type="radio" name="invoiceStatus" value="paid" id="statusPaid" hidden>
+                                        <span class="status-badge status-paid">
+                                            <i data-lucide="check-circle-2"></i>
+                                            Paid
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Customer Info Card -->
+                    <article class="card" data-section="customer">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="user"></i>
+                                </div>
+                                <div>
+                                    <h3>Informasi Pelanggan</h3>
+                                    <p class="card-subtitle">Penerima invoice</p>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="form-field">
+                                <label for="customerName" class="form-label">Nama Pelanggan <span class="required" aria-hidden="true">*</span></label>
+                                <input type="text" id="customerName" class="form-input" placeholder="Nama lengkap pelanggan" required autocomplete="name">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="customerCompany" class="form-label">Nama Perusahaan</label>
+                                <input type="text" id="customerCompany" class="form-input" placeholder="Nama perusahaan (opsional)" autocomplete="organization">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="customerAddress" class="form-label">Alamat Lengkap</label>
+                                <textarea id="customerAddress" class="form-input form-textarea" rows="2" placeholder="Jl. Nama Jalan, Kota, Provinsi, Kode Pos" autocomplete="street-address"></textarea>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="customerEmail" class="form-label">Email</label>
+                                    <input type="email" id="customerEmail" class="form-input" placeholder="email@pelanggan.com" autocomplete="email">
+                                </div>
+                                <div class="form-field">
+                                    <label for="customerPhone" class="form-label">Telepon</label>
+                                    <input type="tel" id="customerPhone" class="form-input" placeholder="+62 xxx xxxx xxxx" autocomplete="tel">
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Items Card -->
+                    <article class="card" data-section="items">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="package"></i>
+                                </div>
+                                <div>
+                                    <h3>Daftar Item</h3>
+                                    <p class="card-subtitle">Produk atau jasa yang ditagihkan</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-primary" id="btnAddItem" aria-label="Tambah item baru">
+                                <i data-lucide="plus"></i>
+                                <span>Tambah</span>
+                            </button>
+                        </header>
+                        <div class="card-body" style="padding-top: 0;">
+                            <div class="items-list" id="itemsList" role="list" aria-label="Daftar item invoice">
+                                <!-- Items rendered here as cards -->
+                            </div>
+                            <p id="emptyItemsHint" class="empty-hint" hidden>
+                                <i data-lucide="package"></i>
+                                Belum ada item. Tambah item pertama Anda.
+                            </p>
+                        </div>
+                    </article>
+
+                    <!-- Calculations Card -->
+                    <article class="card" data-section="calculations">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="calculator"></i>
+                                </div>
+                                <div>
+                                    <h3>Perhitungan</h3>
+                                    <p class="card-subtitle">Diskon, pajak, & total</p>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="discountType" class="form-label">Tipe Diskon</label>
+                                    <select id="discountType" class="form-input form-select">
+                                        <option value="percent">Persentase (%)</option>
+                                        <option value="amount">Nominal (Rp)</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label for="discountValue" class="form-label">Nilai Diskon</label>
+                                    <div class="input-with-prefix" id="discountPrefix">
+                                        <span class="input-prefix">%</span>
+                                        <input type="number" id="discountValue" class="form-input" min="0" step="0.01" value="0" placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="taxRate" class="form-label">PPN <span class="hint">(%)</span></label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="taxRate" class="form-input" min="0" max="100" step="0.01" value="11" placeholder="11">
+                                    <span class="input-suffix">%</span>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="paymentUrl" class="form-label">URL Pembayaran (QR Code)</label>
+                                <input type="url" id="paymentUrl" class="form-input" placeholder="https://payment.example.com/inv/123">
+                                <p class="field-hint">Masukkan URL payment gateway untuk generate QR Code otomatis</p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Notes & Signature Card -->
+                    <article class="card" data-section="notes">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="file-signature"></i>
+                                </div>
+                                <div>
+                                    <h3>Catatan & Tanda Tangan</h3>
+                                    <p class="card-subtitle">Opsional</p>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="form-field">
+                                <label for="notes" class="form-label">Catatan</label>
+                                <textarea id="notes" class="form-input form-textarea" rows="3" placeholder="Catatan untuk pelanggan (contoh: detail bank transfer, syarat khusus, dll)"></textarea>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="paymentTerms" class="form-label">Payment Terms</label>
+                                <textarea id="paymentTerms" class="form-input form-textarea" rows="2" placeholder="Contoh: Pembayaran dalam 14 hari kerja sejak tanggal invoice"></textarea>
+                            </div>
+
+                            <div class="form-field signature-field">
+                                <label for="signature" class="form-label">Tanda Tangan</label>
+                                <div class="signature-upload" role="button" tabindex="0" aria-label="Upload tanda tangan">
+                                    <img id="signaturePreview" class="signature-img" src="" alt="Tanda tangan" hidden>
+                                    <div id="signaturePlaceholder" class="signature-placeholder">
+                                        <i data-lucide="pen-tool"></i>
+                                        <span>Tap untuk upload tanda tangan</span>
+                                        <span class="hint">PNG transparent recommended</span>
+                                    </div>
+                                    <input type="file" id="signature" accept="image/*" hidden>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Template Selector Card -->
+                    <article class="card" data-section="template">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true">
+                                    <i data-lucide="layout"></i>
+                                </div>
+                                <div>
+                                    <h3>Template Invoice</h3>
+                                    <p class="card-subtitle">Pilih gaya tampilan</p>
+                                </div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="template-picker" role="radiogroup" aria-label="Pilih template invoice">
+                                <label class="template-option" data-template="modern">
+                                    <input type="radio" name="template" value="modern" hidden>
+                                    <div class="template-preview modern"></div>
+                                    <div class="template-info">
+                                        <strong>Modern</strong>
+                                        <span>Bersih, profesional, netral</span>
+                                    </div>
+                                </label>
+                                <label class="template-option" data-template="classic">
+                                    <input type="radio" name="template" value="classic" hidden>
+                                    <div class="template-preview classic"></div>
+                                    <div class="template-info">
+                                        <strong>Classic</strong>
+                                        <span>Formal, header tebal, serif</span>
+                                    </div>
+                                </label>
+                                <label class="template-option" data-template="minimal">
+                                    <input type="radio" name="template" value="minimal" hidden>
+                                    <div class="template-preview minimal"></div>
+                                    <div class="template-info">
+                                        <strong>Minimal</strong>
+                                        <span>Tipis, spacious, typography-first</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- PREVIEW TAB -->
+            <section class="tab-panel" id="previewTab" role="tabpanel" aria-labelledby="tab-preview" hidden>
+                <div class="preview-header-sticky">
+                    <div class="preview-header-inner">
+                        <div>
+                            <h2>Preview Invoice</h2>
+                            <p class="preview-subtitle">Cetak atau unduh PDF</p>
+                        </div>
+                        <div class="preview-header-actions">
+                            <div class="template-selector-inline">
+                                <label for="templateSelectFull" class="sr-only">Pilih template</label>
+                                <select id="templateSelectFull" class="form-input form-select" style="width: auto; min-width: 140px;">
+                                    <option value="modern">Modern</option>
+                                    <option value="classic">Classic</option>
+                                    <option value="minimal">Minimal</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-ghost" id="btnPrintFull" title="Print (Ctrl+P)">
+                                <i data-lucide="printer"></i>
+                                <span>Print</span>
+                            </button>
+                            <button class="btn btn-primary" id="btnDownloadPDFFull" title="Download PDF (Ctrl+S)">
+                                <i data-lucide="download"></i>
+                                <span>PDF</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-content">
+                    <div class="preview-canvas" id="previewCanvas">
+                        <div class="invoice-preview" id="invoicePreviewFull">
+                            <div class="preview-empty">
+                                <i data-lucide="file-text"></i>
+                                <h3>Belum Ada Data</h3>
+                                <p>Isi form di tab Editor untuk melihat preview invoice</p>
+                                <button class="btn btn-primary" id="btnGoToEditor">
+                                    <i data-lucide="arrow-left"></i>
+                                    Ke Editor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS TAB -->
+            <section class="tab-panel" id="settingsTab" role="tabpanel" aria-labelledby="tab-settings" hidden>
+                <div class="settings-header-sticky">
+                    <h2>Pengaturan</h2>
+                </div>
+                <div class="settings-content">
+                    <article class="card">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="hard-drive"></i></div>
+                                <div><h3>Data & Penyimpanan</h3><p class="card-subtitle">Kelola data lokal browser</p></div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Semua data invoice tersimpan otomatis di <code>LocalStorage</code> browser. Data tidak dikirim ke server manapun.</p>
+                            <div class="settings-actions">
+                                <button class="btn btn-outline" id="btnExportData">
+                                    <i data-lucide="download"></i>
+                                    <span>Ekspor Data (JSON)</span>
+                                </button>
+                                <button class="btn btn-outline" id="btnImportData">
+                                    <i data-lucide="upload"></i>
+                                    <span>Impor Data</span>
+                                </button>
+                                <input type="file" id="importFile" accept=".json" hidden>
+                                <button class="btn btn-danger" id="btnClearData">
+                                    <i data-lucide="trash-2"></i>
+                                    <span>Hapus Semua Data</span>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="info"></i></div>
+                                <div><h3>Tentang Aplikasi</h3><p class="card-subtitle">Versi & teknologi</p></div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="about-grid">
+                                <div class="about-item">
+                                    <dt>Versi</dt>
+                                    <dd>1.0.0</dd>
+                                </div>
+                                <div class="about-item">
+                                    <dt>Teknologi</dt>
+                                    <dd>HTML5, CSS3, Vanilla JS (ES6)</dd>
+                                </div>
+                                <div class="about-item">
+                                    <dt>Ikon</dt>
+                                    <dd>Lucide Icons</dd>
+                                </div>
+                                <div class="about-item">
+                                    <dt>PDF Engine</dt>
+                                    <dd>jsPDF + html2canvas</dd>
+                                </div>
+                                <div class="about-item">
+                                    <dt>QR Code</dt>
+                                    <dd>QRCode.js</dd>
+                                </div>
+                                <div class="about-item">
+                                    <dt>Font</dt>
+                                    <dd>Inter (Google Fonts)</dd>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="keyboard"></i></div>
+                                <div><h3>Shortcut Keyboard</h3><p class="card-subtitle">Percepat workflow Anda</p></div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="shortcuts-list">
+                                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>P</kbd><span>Print Invoice</span></div>
+                                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Download PDF</span></div>
+                                <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>N</kbd><span>Item Baru</span></div>
+                                <div class="shortcut-item"><kbd>Delete</kbd><span>Hapus Item (saat focus)</span></div>
+                                <div class="shortcut-item"><kbd>Tab</kbd><span>Navigasi Field</span></div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Action Buttons (Mobile) -->
+    <div class="fab-group" id="fabGroup" aria-hidden="true">
+        <button class="fab fab-primary" id="fabAddItem" aria-label="Tambah item cepat">
+            <i data-lucide="plus"></i>
+        </button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notifikasi"></div>
+
+    <!-- Confirmation Modal -->
+    <dialog class="modal" id="confirmModal" role="alertdialog" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+        <div class="modal-box">
+            <header class="modal-header">
+                <h3 id="modalTitle">Konfirmasi</h3>
+                <button class="modal-close" id="modalClose" aria-label="Tutup dialog">
+                    <i data-lucide="x"></i>
+                </button>
+            </header>
+            <p id="modalMessage">Apakah Anda yakin?</p>
+            <footer class="modal-footer">
+                <button class="btn btn-ghost" id="modalCancel">Batal</button>
+                <button class="btn btn-danger" id="modalConfirm" autofocus>Ya, Hapus</button>
+            </footer>
+        </div>
+    </dialog>
+
+    <script src="script.js"></script>
+</body>
+</html>
