@@ -235,9 +235,6 @@ class InvoiceApp {
     this.btnAddItem = document.getElementById('btnAddItem');
     this.fabAddItem = document.getElementById('fabAddItem');
 
-    this.templateSelectFull = document.getElementById('templateSelectFull');
-    this.templateRadios = document.querySelectorAll('input[name="template"]');
-
     this.statusRadios = document.querySelectorAll('input[name="invoiceStatus"]');
 
     this.btnClearData = document.getElementById('btnClearData');
@@ -326,15 +323,6 @@ class InvoiceApp {
         this.syncTemplateUI();
       });
     });
-    if (this.templateSelectFull) {
-      this.templateSelectFull.addEventListener('change', (e) => {
-        this.state.template = e.target.value;
-        this.saveState();
-        this.renderPreview();
-        this.syncTemplateUI();
-      });
-    }
-
     // Status radios
     this.statusRadios.forEach(r => {
       r.addEventListener('change', (e) => {
@@ -535,13 +523,6 @@ class InvoiceApp {
       const v = opt.dataset.status;
       const checked = this.state.invoice.status === v;
       opt.classList.toggle('is-active', checked);
-    });
-  }
-
-  syncTemplateUI() {
-    document.querySelectorAll('.template-option').forEach(opt => {
-      const v = opt.dataset.template;
-      opt.classList.toggle('is-active', this.state.template === v);
     });
   }
 
@@ -766,7 +747,7 @@ class InvoiceApp {
     // Validate required before render? still render with placeholders
     const html = this.buildInvoiceHTML();
     this.invoicePreviewFull.innerHTML = html;
-    this.invoicePreviewFull.className = `invoice-preview template-${this.state.template || 'modern'}`;
+    this.invoicePreviewFull.className = 'invoice-preview';
     this.renderQRCode(this.invoicePreviewFull);
     this.initIcons();
   }
