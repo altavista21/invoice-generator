@@ -1061,12 +1061,36 @@ img { max-width: 100%; display: block; }
 .template-minimal .inv-table tbody td { border-bottom: 1px solid #f1f5f9; }
 .template-minimal .inv-summary-row.total { border-top: 1px solid #0f172a; }
 
+/* Profile & Preferences */
+.settings-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.preference-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.preference-row > div { min-width: 0; }
+.preference-row strong { display: block; font-size: 14px; color: var(--text); }
+.preference-row p { margin-top: 3px; color: var(--text-muted); font-size: 12px; }
+.preference-row .btn { flex-shrink: 0; }
+
 /* Settings */
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-actions .btn { width: 100%; }
 
 .about-grid {
   display: grid;
@@ -1265,6 +1289,8 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 480px) {
   :root { --space-2: 12px; --space-3: 16px; }
+  .preference-row { align-items: flex-start; flex-direction: column; }
+  .preference-row .btn { width: 100%; }
   .header-inner { padding: 0 12px; }
   .main-content { padding: 12px; padding-bottom: calc(var(--tabs-h) + 80px); }
   .card-header { padding: 12px 14px; }
