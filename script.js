@@ -313,16 +313,6 @@ class InvoiceApp {
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); this.addItem(); }
     });
 
-    // Template radios
-    this.templateRadios.forEach(r => {
-      r.addEventListener('change', (e) => {
-        this.state.template = e.target.value;
-        if (this.templateSelectFull) this.templateSelectFull.value = this.state.template;
-        this.saveState();
-        this.renderPreview();
-        this.syncTemplateUI();
-      });
-    });
     // Status radios
     this.statusRadios.forEach(r => {
       r.addEventListener('change', (e) => {
