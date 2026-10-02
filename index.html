@@ -47,6 +47,10 @@
                 <i data-lucide="eye"></i>
                 <span>Preview</span>
             </button>
+            <button class="mobile-tab" role="tab" aria-selected="false" data-tab="history" id="tab-history">
+                <i data-lucide="history"></i>
+                <span>Riwayat</span>
+            </button>
             <button class="mobile-tab" role="tab" aria-selected="false" data-tab="settings" id="tab-settings">
                 <i data-lucide="settings"></i>
                 <span>Pengaturan</span>
@@ -64,6 +68,10 @@
                 <button class="sidebar-item" data-tab="preview">
                     <i data-lucide="eye"></i>
                     <span>Preview</span>
+                </button>
+                <button class="sidebar-item" data-tab="history">
+                    <i data-lucide="history"></i>
+                    <span>Riwayat</span>
                 </button>
                 <button class="sidebar-item" data-tab="settings">
                     <i data-lucide="settings"></i>
@@ -440,6 +448,14 @@
                                     <option value="minimal">Minimal</option>
                                 </select>
                             </div>
+                            <button class="btn btn-ghost" id="btnShareInvoice" title="Bagikan invoice">
+                                <i data-lucide="share-2"></i>
+                                <span>Bagikan</span>
+                            </button>
+                            <button class="btn btn-ghost" id="btnSaveHistory" title="Simpan ke riwayat">
+                                <i data-lucide="bookmark"></i>
+                                <span>Simpan</span>
+                            </button>
                             <button class="btn btn-ghost" id="btnPrintFull" title="Print (Ctrl+P)">
                                 <i data-lucide="printer"></i>
                                 <span>Print</span>
@@ -466,6 +482,26 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- HISTORY TAB -->
+            <section class="tab-panel" id="historyTab" role="tabpanel" aria-labelledby="tab-history" hidden>
+                <div class="settings-header-sticky">
+                    <h2>Riwayat Invoice</h2>
+                    <p class="preview-subtitle">Invoice yang disimpan di perangkat ini</p>
+                </div>
+                <div class="settings-content">
+                    <article class="card">
+                        <div class="card-body">
+                            <div id="historyList" class="history-list"></div>
+                            <div id="historyEmpty" class="history-empty">
+                                <i data-lucide="history"></i>
+                                <h3>Belum ada riwayat</h3>
+                                <p>Tekan “Simpan” di Preview untuk menyimpan invoice ke perangkat.</p>
+                            </div>
+                        </div>
+                    </article>
                 </div>
             </section>
 
