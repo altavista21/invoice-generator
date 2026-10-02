@@ -138,6 +138,7 @@ class InvoiceApp {
     this.emptyItemsHint = document.getElementById('emptyItemsHint');
     this.invoicePreviewFull = document.getElementById('invoicePreviewFull');
     this.previewCanvas = document.getElementById('previewCanvas');
+    this.historyList = document.getElementById('historyList');
     this.toastContainer = document.getElementById('toastContainer');
 
     this.confirmModal = document.getElementById('confirmModal');
@@ -186,6 +187,10 @@ class InvoiceApp {
     if (this.btnPrint) this.btnPrint.addEventListener('click', handlePrint);
     if (this.btnDownloadPDF) this.btnDownloadPDF.addEventListener('click', handleDownload);
     if (this.btnPrintFull) this.btnPrintFull.addEventListener('click', handlePrint);
+    const btnShare = document.getElementById('btnShareInvoice');
+    if (btnShare) btnShare.addEventListener('click', () => this.shareInvoice());
+    const btnSaveHistory = document.getElementById('btnSaveHistory');
+    if (btnSaveHistory) btnSaveHistory.addEventListener('click', () => this.saveToHistory());
     if (this.btnDownloadPDFFull) this.btnDownloadPDFFull.addEventListener('click', handleDownload);
 
     // Shortcuts
@@ -725,6 +730,152 @@ class InvoiceApp {
         new QRCode(target, { text: url, width: 88, height: 88, colorDark: '#0f172a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
       }
     } catch (e) { console.warn('QR gagal', e); }
+  }
+
+  async shareInvoice() {
+    if (!this.validateRequired()) return;
+    const title = `Invoice ${this.state.invoice.number || 'Invoice'}`;
+    const totals = this.calculateTotals();
+    const text = `${title}\nPelanggan: ${this.state.customer.name}\nTotal: ${this.formatCurrency(totals.grandTotal)}\nStatus: ${this.state.invoice.status || 'unpaid'}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text });
+        this.showToast('Invoice siap dibagikan', 'success');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        this.showToast('Ringkasan invoice disalin. Browser ini belum mendukung Share.', 'info');
+      } else {
+        this.showToast('Fitur share tidak didukung browser ini', 'error');
+      }
+    } catch (e) {
+      if (e?.name !== 'AbortError') this.showToast('Gagal membagikan invoice', 'error');
+    }
+  }
+
+  // History
+  getHistory() {
+    try {
+      const data = JSON.parse(localStorage.getItem('invoicepro_history') || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  saveToHistory() {
+    if (!this.validateRequired()) return false;
+    const snapshot = JSON.parse(JSON.stringify(this.state));
+    snapshot.savedAt = new Date().toISOString();
+
+    let history = this.getHistory();
+    const existingIndex = history.findIndex(item => item.invoice?.number === snapshot.invoice?.number);
+
+    if (existingIndex >= 0) history[existingIndex] = snapshot;
+    else history.unshift(snapshot);
+
+    history = history.slice(0, 50);
+    try {
+      localStorage.setItem('invoicepro_history', JSON.stringify(history));
+      this.renderHistory();
+      this.showToast('Invoice disimpan ke riwayat', 'success');
+      return true;
+    } catch (e) {
+      this.showToast('Gagal menyimpan riwayat', 'error');
+      return false;
+    }
+  }
+
+  loadHistoryItem(index) {
+    const history = this.getHistory();
+    const item = history[index];
+    if (!item) return;
+
+    this.state = {
+      ...defaultState,
+      ...item,
+      business: { ...defaultState.business, ...(item.business || {}) },
+      invoice: { ...defaultState.invoice, ...(item.invoice || {}) },
+      customer: { ...defaultState.customer, ...(item.customer || {}) },
+      calculations: { ...defaultState.calculations, ...(item.calculations || {}) },
+      items: Array.isArray(item.items) ? item.items : []
+    };
+
+    this.saveState();
+    this.populateForm();
+    this.renderItemsList();
+    this.renderPreview();
+    this.switchTab('history');
+    this.showToast('Invoice dimuat dari riwayat', 'success');
+  }
+
+  deleteHistoryItem(index) {
+    const history = this.getHistory();
+    if (!history[index]) return;
+    history.splice(index, 1);
+    localStorage.setItem('invoicepro_history', JSON.stringify(history));
+    this.renderHistory();
+    this.showToast('Invoice dihapus dari riwayat', 'success');
+  }
+
+  renderHistory() {
+    const container = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
+    if (!container) return;
+
+    const history = this.getHistory();
+    container.innerHTML = '';
+
+    if (!history.length) {
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    history.forEach((item, index) => {
+      const totals = this.calculateTotalsFor(item);
+      const row = document.createElement('article');
+      row.className = 'history-card';
+      row.innerHTML = `
+        <div class="history-main">
+          <div>
+            <strong>${this.escapeHtml(item.invoice?.number || 'Tanpa nomor')}</strong>
+            <span>${this.escapeHtml(item.customer?.name || 'Pelanggan')}</span>
+          </div>
+          <strong>${this.formatCurrencyFor(totals.grandTotal, item.invoice?.currency)}</strong>
+        </div>
+        <div class="history-meta">
+          <span>${this.escapeHtml(this.formatDate(item.invoice?.date))}</span>
+          <span class="history-status history-${this.escapeHtml(item.invoice?.status || 'draft')}">${this.escapeHtml(item.invoice?.status || 'draft')}</span>
+        </div>
+        <div class="history-actions">
+          <button type="button" class="btn btn-sm btn-primary history-load"><i data-lucide="folder-open"></i> Muat</button>
+          <button type="button" class="btn btn-sm btn-ghost history-delete"><i data-lucide="trash-2"></i></button>
+        </div>`;
+      row.querySelector('.history-load').addEventListener('click', () => this.loadHistoryItem(index));
+      row.querySelector('.history-delete').addEventListener('click', () => this.deleteHistoryItem(index));
+      container.appendChild(row);
+    });
+    this.initIcons();
+  }
+
+  calculateTotalsFor(state) {
+    const subtotal = (state.items || []).reduce((acc, it) => acc + (Number(it.qty) || 0) * (Number(it.price) || 0), 0);
+    let discount = state.calculations?.discountType === 'percent'
+      ? subtotal * ((Number(state.calculations?.discountValue) || 0) / 100)
+      : (Number(state.calculations?.discountValue) || 0);
+    discount = Math.min(subtotal, Math.max(0, discount));
+    const taxable = Math.max(0, subtotal - discount);
+    const tax = taxable * (Math.max(0, Number(state.calculations?.taxRate) || 0) / 100);
+    return { subtotal, discount, tax, grandTotal: taxable + tax };
+  }
+
+  formatCurrencyFor(amount, currency) {
+    const cur = currency || 'IDR';
+    const num = Math.round(Number(amount) || 0);
+    if (cur === 'IDR') return 'Rp ' + num.toLocaleString('id-ID');
+    try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(num); }
+    catch { return `${cur} ${num.toLocaleString()}`; }
   }
 
   // Export
