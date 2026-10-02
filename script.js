@@ -37,7 +37,6 @@ const defaultState = {
   notes: '',
   paymentTerms: '',
   signature: '',
-  template: 'modern',
   theme: 'light'
 };
 
