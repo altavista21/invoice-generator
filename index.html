@@ -386,51 +386,6 @@
                         </div>
                     </article>
 
-                    <!-- Template Selector Card -->
-                    <article class="card" data-section="template">
-                        <header class="card-header">
-                            <div class="card-title-row">
-                                <div class="card-icon" aria-hidden="true">
-                                    <i data-lucide="layout"></i>
-                                </div>
-                                <div>
-                                    <h3>Template Invoice</h3>
-                                    <p class="card-subtitle">Pilih gaya tampilan</p>
-                                </div>
-                            </div>
-                        </header>
-                        <div class="card-body">
-                            <div class="template-picker" role="radiogroup" aria-label="Pilih template invoice">
-                                <label class="template-option" data-template="modern">
-                                    <input type="radio" name="template" value="modern" hidden>
-                                    <div class="template-preview modern"></div>
-                                    <div class="template-info">
-                                        <strong>Modern</strong>
-                                        <span>Bersih, profesional, netral</span>
-                                    </div>
-                                </label>
-                                <label class="template-option" data-template="classic">
-                                    <input type="radio" name="template" value="classic" hidden>
-                                    <div class="template-preview classic"></div>
-                                    <div class="template-info">
-                                        <strong>Classic</strong>
-                                        <span>Formal, header tebal, serif</span>
-                                    </div>
-                                </label>
-                                <label class="template-option" data-template="minimal">
-                                    <input type="radio" name="template" value="minimal" hidden>
-                                    <div class="template-preview minimal"></div>
-                                    <div class="template-info">
-                                        <strong>Minimal</strong>
-                                        <span>Tipis, spacious, typography-first</span>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
             <!-- PREVIEW TAB -->
             <section class="tab-panel" id="previewTab" role="tabpanel" aria-labelledby="tab-preview" hidden>
                 <div class="preview-header-sticky">
@@ -440,14 +395,6 @@
                             <p class="preview-subtitle">Cetak atau unduh PDF</p>
                         </div>
                         <div class="preview-header-actions">
-                            <div class="template-selector-inline">
-                                <label for="templateSelectFull" class="sr-only">Pilih template</label>
-                                <select id="templateSelectFull" class="form-input form-select" style="width: auto; min-width: 140px;">
-                                    <option value="modern">Modern</option>
-                                    <option value="classic">Classic</option>
-                                    <option value="minimal">Minimal</option>
-                                </select>
-                            </div>
                             <button class="btn btn-ghost" id="btnShareInvoice" title="Bagikan invoice">
                                 <i data-lucide="share-2"></i>
                                 <span>Bagikan</span>
