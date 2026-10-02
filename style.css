@@ -1048,19 +1048,6 @@ img { max-width: 100%; display: block; }
 .inv-signature-line { width: 160px; height: 1px; background: #0f172a; margin: 6px 0 6px auto; }
 .inv-signature p { font-size: 11px; color: #64748b; }
 
-/* Template Variations */
-.template-classic .inv-title { font-family: Georgia, serif; font-weight: 700; letter-spacing: -0.02em; }
-.template-classic .inv-header { border-bottom: 3px double #0f172a; }
-.template-classic .inv-table thead th { background: #0f172a; color: #fff; }
-.template-classic .inv-summary-row.total { border-top-color: #0f172a; }
-
-.template-minimal .inv-header { border-bottom: 1px solid #e2e8f0; padding-bottom: 18px; }
-.template-minimal .inv-title { font-weight: 300; letter-spacing: 0.12em; text-transform: uppercase; font-size: 20px; }
-.template-minimal .inv-table-wrap { border: none; border-radius: 0; }
-.template-minimal .inv-table thead th { background: transparent; border-bottom: 1px solid #0f172a; color: #0f172a; }
-.template-minimal .inv-table tbody td { border-bottom: 1px solid #f1f5f9; }
-.template-minimal .inv-summary-row.total { border-top: 1px solid #0f172a; }
-
 /* Profile & Preferences */
 .settings-note {
   margin: 0;
@@ -1251,7 +1238,6 @@ img { max-width: 100%; display: block; }
    ========================================= */
 @media (min-width: 640px) {
   .form-grid { grid-template-columns: repeat(2, 1fr); }
-  .template-picker { grid-template-columns: repeat(3, 1fr); }
   .inv-parties { grid-template-columns: 1fr 1fr; }
   .settings-actions { flex-direction: row; flex-wrap: wrap; }
   .settings-actions .btn { width: auto; }
