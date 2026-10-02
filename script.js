@@ -3,59 +3,63 @@
  * Vanilla ES6 | All logic in browser | LocalStorage auto-save
  */
 
+const today = new Date().toISOString().split('T')[0];
+
 const defaultState = {
   business: {
-    name: 'PT Solusi Digital Nusantara',
-    address: 'Jl. Sudirman No. 45, Jakarta Selatan 12190',
-    email: 'billing@solusidigital.id',
-    phone: '+62 21 5550 1234',
+    name: '',
+    address: '',
+    email: '',
+    phone: '',
     logo: ''
   },
   invoice: {
     number: '',
-    date: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    date: today,
+    dueDate: '',
     currency: 'IDR',
-    status: 'unpaid'
+    status: 'draft'
   },
   customer: {
-    name: 'Budi Santoso',
-    company: 'CV Maju Jaya Abadi',
-    address: 'Jl. Gatot Subroto Kav. 12, Bandung 40262',
-    email: 'budi@majujaya.co.id',
-    phone: '+62 812 3456 7890'
+    name: '',
+    company: '',
+    address: '',
+    email: '',
+    phone: ''
   },
-  items: [
-    {
-      id: 'item_1',
-      name: 'Pengembangan Website E-Commerce',
-      description: 'Termasuk integrasi payment gateway, sistem katalog, dan dashboard admin',
-      qty: 1,
-      price: 15000000
-    },
-    {
-      id: 'item_2',
-      name: 'Maintenance & Hosting (Tahunan)',
-      description: 'Cloud VPS, SSL certificate, automated daily backup & SLA 99.9%',
-      qty: 1,
-      price: 3600000
-    }
-  ],
+  items: [],
   calculations: {
     discountType: 'percent',
-    discountValue: 5,
-    taxRate: 11,
-    paymentUrl: 'https://pay.solusidigital.id/inv-001'
+    discountValue: 0,
+    taxRate: 0,
+    paymentUrl: ''
   },
-  notes: 'Terima kasih atas kepercayaan Anda bermitra dengan kami.\nTransfer pembayaran ke Rekening BCA: 123-456-7890 a/n PT Solusi Digital Nusantara.',
-  paymentTerms: 'Pembayaran wajib diselesaikan selambat-lambatnya 14 hari sejak tanggal invoice diterbitkan.',
+  notes: '',
+  paymentTerms: '',
   signature: '',
   template: 'modern',
   theme: 'light'
 };
 
 class InvoiceApp {
+  clearDemoDataIfPresent() {
+    const raw = localStorage.getItem('invoicepro_state');
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw);
+      const demoMarkers = [
+        saved?.business?.name === 'PT Solusi Digital Nusantara',
+        saved?.customer?.name === 'Budi Santoso',
+        saved?.calculations?.paymentUrl === 'https://pay.solusidigital.id/inv-001'
+      ];
+      if (demoMarkers.some(Boolean)) localStorage.removeItem('invoicepro_state');
+    } catch {
+      localStorage.removeItem('invoicepro_state');
+    }
+  }
+
   constructor() {
+    this.clearDemoDataIfPresent();
     this.state = this.loadState();
     this.ensureInvoiceNumber();
     this.initElements();
