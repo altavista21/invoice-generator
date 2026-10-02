@@ -53,7 +53,7 @@
             </button>
             <button class="mobile-tab" role="tab" aria-selected="false" data-tab="settings" id="tab-settings">
                 <i data-lucide="settings"></i>
-                <span>Pengaturan</span>
+                <span>Profil & Preferensi</span>
             </button>
         </nav>
     </header>
@@ -452,21 +452,133 @@
                 </div>
             </section>
 
-            <!-- SETTINGS TAB -->
+            <!-- PROFILE & PREFERENCES TAB -->
             <section class="tab-panel" id="settingsTab" role="tabpanel" aria-labelledby="tab-settings" hidden>
                 <div class="settings-header-sticky">
-                    <h2>Pengaturan</h2>
+                    <h2>Profil & Preferensi</h2>
+                    <p class="preview-subtitle">Atur identitas bisnis dan perilaku default InvoicePro</p>
                 </div>
                 <div class="settings-content">
                     <article class="card">
                         <header class="card-header">
                             <div class="card-title-row">
-                                <div class="card-icon" aria-hidden="true"><i data-lucide="hard-drive"></i></div>
-                                <div><h3>Data & Penyimpanan</h3><p class="card-subtitle">Kelola data lokal browser</p></div>
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="building-2"></i></div>
+                                <div><h3>Profil Bisnis</h3><p class="card-subtitle">Identitas yang bisa dipakai berulang</p></div>
                             </div>
                         </header>
                         <div class="card-body">
-                            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Semua data invoice tersimpan otomatis di <code>LocalStorage</code> browser. Data tidak dikirim ke server manapun.</p>
+                            <div class="form-field">
+                                <label for="profileBusinessName" class="form-label">Nama Bisnis</label>
+                                <input type="text" id="profileBusinessName" class="form-input" placeholder="Nama bisnis Anda" autocomplete="organization">
+                            </div>
+                            <div class="form-field">
+                                <label for="profileBusinessAddress" class="form-label">Alamat</label>
+                                <textarea id="profileBusinessAddress" class="form-input form-textarea" rows="2" placeholder="Alamat bisnis"></textarea>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="profileBusinessEmail" class="form-label">Email</label>
+                                    <input type="email" id="profileBusinessEmail" class="form-input" placeholder="email@bisnis.com" autocomplete="email">
+                                </div>
+                                <div class="form-field">
+                                    <label for="profileBusinessPhone" class="form-label">Telepon</label>
+                                    <input type="tel" id="profileBusinessPhone" class="form-input" placeholder="+62 xxx xxxx xxxx" autocomplete="tel">
+                                </div>
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" id="btnSaveBusinessProfile">
+                                    <i data-lucide="save"></i>
+                                    <span>Simpan Profil</span>
+                                </button>
+                                <button class="btn btn-outline" id="btnApplyBusinessProfile">
+                                    <i data-lucide="arrow-down-to-line"></i>
+                                    <span>Terapkan ke Invoice Ini</span>
+                                </button>
+                            </div>
+                            <p class="settings-note">Profil disimpan di perangkat ini. Menyimpan profil tidak mengubah invoice yang sedang dikerjakan.</p>
+                        </div>
+                    </article>
+
+                    <article class="card">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="sliders-horizontal"></i></div>
+                                <div><h3>Preferensi Invoice</h3><p class="card-subtitle">Nilai default untuk pekerjaan berikutnya</p></div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="prefCurrency" class="form-label">Mata Uang Default</label>
+                                    <select id="prefCurrency" class="form-input form-select">
+                                        <option value="IDR">IDR — Rupiah</option>
+                                        <option value="USD">USD — Dollar AS</option>
+                                        <option value="EUR">EUR — Euro</option>
+                                        <option value="SGD">SGD — Dollar SG</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label for="prefStatus" class="form-label">Status Default</label>
+                                    <select id="prefStatus" class="form-input form-select">
+                                        <option value="draft">Draft</option>
+                                        <option value="unpaid">Unpaid</option>
+                                        <option value="paid">Paid</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label for="prefTaxRate" class="form-label">PPN Default (%)</label>
+                                    <input type="number" id="prefTaxRate" class="form-input" min="0" max="100" step="0.01" inputmode="decimal" placeholder="0">
+                                </div>
+                                <div class="form-field">
+                                    <label for="prefDueDays" class="form-label">Jatuh Tempo Default (hari)</label>
+                                    <input type="number" id="prefDueDays" class="form-input" min="0" max="3650" step="1" inputmode="numeric" placeholder="14">
+                                </div>
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" id="btnSavePreferences">
+                                    <i data-lucide="save"></i>
+                                    <span>Simpan Preferensi</span>
+                                </button>
+                                <button class="btn btn-ghost" id="btnApplyPreferences">
+                                    <i data-lucide="check"></i>
+                                    <span>Terapkan ke Invoice Ini</span>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="moon"></i></div>
+                                <div><h3>Tampilan</h3><p class="card-subtitle">Preferensi visual aplikasi</p></div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <div class="preference-row">
+                                <div>
+                                    <strong>Tema</strong>
+                                    <p>Gunakan mode terang atau gelap.</p>
+                                </div>
+                                <button class="btn btn-outline" id="btnProfileTheme" type="button">
+                                    <i data-lucide="sun-moon"></i>
+                                    <span id="profileThemeLabel">Tema Terang</span>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card">
+                        <header class="card-header">
+                            <div class="card-title-row">
+                                <div class="card-icon" aria-hidden="true"><i data-lucide="hard-drive"></i></div>
+                                <div><h3>Data & Backup</h3><p class="card-subtitle">Kelola data lokal browser</p></div>
+                            </div>
+                        </header>
+                        <div class="card-body">
+                            <p class="settings-note">Invoice, profil, dan preferensi tersimpan otomatis di perangkat ini. Data tidak dikirim ke server.</p>
                             <div class="settings-actions">
                                 <button class="btn btn-outline" id="btnExportData">
                                     <i data-lucide="download"></i>
@@ -479,19 +591,17 @@
                                 <input type="file" id="importFile" accept=".json" hidden>
                                 <button class="btn btn-danger" id="btnClearData">
                                     <i data-lucide="trash-2"></i>
-                                    <span>Hapus Semua Data</span>
+                                    <span>Hapus Data Invoice</span>
                                 </button>
                             </div>
                         </div>
                     </article>
 
-                    
-
                     <article class="card">
                         <header class="card-header">
                             <div class="card-title-row">
                                 <div class="card-icon" aria-hidden="true"><i data-lucide="keyboard"></i></div>
-                                <div><h3>Shortcut Keyboard</h3><p class="card-subtitle">Percepat workflow Anda</p></div>
+                                <div><h3>Shortcut</h3><p class="card-subtitle">Pintasan keyboard untuk desktop</p></div>
                             </div>
                         </header>
                         <div class="card-body">
@@ -499,8 +609,6 @@
                                 <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>P</kbd><span>Print Invoice</span></div>
                                 <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Download PDF</span></div>
                                 <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>N</kbd><span>Item Baru</span></div>
-                                <div class="shortcut-item"><kbd>Delete</kbd><span>Hapus Item (saat focus)</span></div>
-                                <div class="shortcut-item"><kbd>Tab</kbd><span>Navigasi Field</span></div>
                             </div>
                         </div>
                     </article>
