@@ -573,7 +573,8 @@ class InvoiceApp {
     else discount = this.state.calculations.discountValue;
     discount = Math.min(subtotal, Math.max(0, discount));
     const taxable = Math.max(0, subtotal - discount);
-    const tax = taxable * (this.state.calculations.taxRate / 100);
+    const taxRate = Math.min(100, Math.max(0, Number(this.state.calculations.taxRate) || 0));
+    const tax = taxable * (taxRate / 100);
     const grandTotal = taxable + tax;
     return { subtotal, discount, tax, grandTotal };
   }
@@ -733,6 +734,11 @@ class InvoiceApp {
     if (!s.invoice.number?.trim()) { this.showToast('Nomor invoice wajib diisi', 'error'); return false; }
     if (!s.customer.name?.trim()) { this.showToast('Nama pelanggan wajib diisi', 'error'); return false; }
     if (!s.invoice.date || !s.invoice.dueDate) { this.showToast('Tanggal invoice & jatuh tempo wajib diisi', 'error'); return false; }
+    if (s.invoice.dueDate < s.invoice.date) { this.showToast('Jatuh tempo tidak boleh sebelum tanggal invoice', 'error'); return false; }
+    const taxRate = Number(s.calculations.taxRate);
+    if (!Number.isFinite(taxRate) || taxRate < 0 || taxRate > 100) { this.showToast('PPN harus antara 0% sampai 100%', 'error'); return false; }
+    const discountValue = Number(s.calculations.discountValue);
+    if (!Number.isFinite(discountValue) || discountValue < 0) { this.showToast('Nilai diskon tidak valid', 'error'); return false; }
     for (const it of s.items) {
       if (!it.name?.trim()) { this.showToast('Nama produk/jasa tidak boleh kosong', 'error'); return false; }
       if (it.qty < 1) { this.showToast('Qty minimal 1', 'error'); return false; }
@@ -772,22 +778,43 @@ class InvoiceApp {
       document.body.appendChild(clone);
       const canvas = await html2canvas(clone, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 1024 });
       document.body.removeChild(clone);
+
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      // Pagination if taller than one page
-      let heightLeft = pdfHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= 297;
-      while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= 297;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // Render the long invoice across A4 pages without stretching or duplicating content.
+      const pxPerMm = canvas.width / pageWidth;
+      const pageHeightPx = Math.floor(pageHeight * pxPerMm);
+      let offsetY = 0;
+      let pageIndex = 0;
+
+      while (offsetY < canvas.height) {
+        const sliceHeightPx = Math.min(pageHeightPx, canvas.height - offsetY);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sliceHeightPx;
+
+        const ctx = pageCanvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas PDF tidak tersedia');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, offsetY, canvas.width, sliceHeightPx,
+          0, 0, canvas.width, sliceHeightPx
+        );
+
+        if (pageIndex > 0) pdf.addPage();
+        const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
+        const sliceHeightMm = sliceHeightPx / pxPerMm;
+        pdf.addImage(pageImg, 'JPEG', 0, 0, pageWidth, sliceHeightMm);
+
+        offsetY += sliceHeightPx;
+        pageIndex++;
       }
+
       pdf.save(filename);
       this.showToast(`Berhasil mengunduh ${filename}`, 'success');
     } catch (err) {
