@@ -5,6 +5,13 @@
 
 const today = new Date().toISOString().split('T')[0];
 
+const defaultPreferences = {
+  currency: 'IDR',
+  status: 'draft',
+  taxRate: 0,
+  dueDays: 14
+};
+
 const defaultState = {
   business: {
     name: '',
@@ -59,6 +66,8 @@ class InvoiceApp {
 
   constructor() {
     this.clearDemoDataIfPresent();
+    this.preferences = this.loadPreferences();
+    this.businessProfile = this.loadBusinessProfile();
     this.state = this.loadState();
     this.ensureInvoiceNumber();
     this.initElements();
@@ -67,6 +76,7 @@ class InvoiceApp {
     this.renderItemsList();
     this.applyTheme();
     this.renderPreview();
+    this.populateProfilePreferences();
     this.updateDiscountPrefix();
     this.initIcons();
   }
@@ -93,6 +103,104 @@ class InvoiceApp {
 
   saveState() {
     try { localStorage.setItem('invoicepro_state', JSON.stringify(this.state)); } catch (e) {}
+  }
+
+  loadPreferences() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('invoicepro_preferences') || 'null');
+      return { ...defaultPreferences, ...(saved || {}) };
+    } catch (e) {
+      return { ...defaultPreferences };
+    }
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem('invoicepro_preferences', JSON.stringify(this.preferences));
+    } catch (e) {}
+  }
+
+  loadBusinessProfile() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('invoicepro_business_profile') || 'null');
+      return {
+        name: '', address: '', email: '', phone: '',
+        ...(saved || {})
+      };
+    } catch (e) {
+      return { name: '', address: '', email: '', phone: '' };
+    }
+  }
+
+  saveBusinessProfile() {
+    try {
+      localStorage.setItem('invoicepro_business_profile', JSON.stringify(this.businessProfile));
+    } catch (e) {}
+  }
+
+  populateProfilePreferences() {
+    this.setVal('profileBusinessName', this.businessProfile.name);
+    this.setVal('profileBusinessAddress', this.businessProfile.address);
+    this.setVal('profileBusinessEmail', this.businessProfile.email);
+    this.setVal('profileBusinessPhone', this.businessProfile.phone);
+    this.setVal('prefCurrency', this.preferences.currency);
+    this.setVal('prefStatus', this.preferences.status);
+    this.setVal('prefTaxRate', this.preferences.taxRate);
+    this.setVal('prefDueDays', this.preferences.dueDays);
+    this.updateProfileThemeLabel();
+  }
+
+  readBusinessProfileForm() {
+    return {
+      name: document.getElementById('profileBusinessName')?.value.trim() || '',
+      address: document.getElementById('profileBusinessAddress')?.value.trim() || '',
+      email: document.getElementById('profileBusinessEmail')?.value.trim() || '',
+      phone: document.getElementById('profileBusinessPhone')?.value.trim() || ''
+    };
+  }
+
+  readPreferencesForm() {
+    let taxRate = Number(document.getElementById('prefTaxRate')?.value);
+    let dueDays = Number(document.getElementById('prefDueDays')?.value);
+    if (!Number.isFinite(taxRate)) taxRate = 0;
+    if (!Number.isFinite(dueDays)) dueDays = 14;
+    return {
+      currency: document.getElementById('prefCurrency')?.value || 'IDR',
+      status: document.getElementById('prefStatus')?.value || 'draft',
+      taxRate: Math.min(100, Math.max(0, taxRate)),
+      dueDays: Math.min(3650, Math.max(0, Math.round(dueDays)))
+    };
+  }
+
+  applyBusinessProfile() {
+    this.state.business = { ...this.state.business, ...this.readBusinessProfileForm() };
+    this.saveState();
+    this.populateForm();
+    this.renderPreview();
+    this.showToast('Profil bisnis diterapkan ke invoice ini', 'success');
+  }
+
+  applyPreferences() {
+    const prefs = this.readPreferencesForm();
+    this.preferences = prefs;
+    this.savePreferences();
+    this.state.invoice.currency = prefs.currency;
+    this.state.invoice.status = prefs.status;
+    this.state.calculations.taxRate = prefs.taxRate;
+    if (this.state.invoice.date && prefs.dueDays >= 0) {
+      const date = new Date(this.state.invoice.date + 'T00:00:00');
+      date.setDate(date.getDate() + prefs.dueDays);
+      this.state.invoice.dueDate = date.toISOString().split('T')[0];
+    }
+    this.saveState();
+    this.populateForm();
+    this.renderPreview();
+    this.showToast('Preferensi diterapkan ke invoice ini', 'success');
+  }
+
+  updateProfileThemeLabel() {
+    const label = document.getElementById('profileThemeLabel');
+    if (label) label.textContent = this.state.theme === 'dark' ? 'Tema Gelap' : 'Tema Terang';
   }
 
   ensureInvoiceNumber() {
@@ -136,6 +244,11 @@ class InvoiceApp {
     this.btnExportData = document.getElementById('btnExportData');
     this.btnImportData = document.getElementById('btnImportData');
     this.importFile = document.getElementById('importFile');
+    this.btnSaveBusinessProfile = document.getElementById('btnSaveBusinessProfile');
+    this.btnApplyBusinessProfile = document.getElementById('btnApplyBusinessProfile');
+    this.btnSavePreferences = document.getElementById('btnSavePreferences');
+    this.btnApplyPreferences = document.getElementById('btnApplyPreferences');
+    this.btnProfileTheme = document.getElementById('btnProfileTheme');
 
     this.itemsList = document.getElementById('itemsList');
     this.emptyItemsHint = document.getElementById('emptyItemsHint');
@@ -254,6 +367,24 @@ class InvoiceApp {
       this.saveState(); this.renderPreview();
     });
 
+    // Profil & Preferensi
+    if (this.btnSaveBusinessProfile) this.btnSaveBusinessProfile.addEventListener('click', () => {
+      this.businessProfile = this.readBusinessProfileForm();
+      this.saveBusinessProfile();
+      this.showToast('Profil bisnis disimpan', 'success');
+    });
+    if (this.btnApplyBusinessProfile) this.btnApplyBusinessProfile.addEventListener('click', () => this.applyBusinessProfile());
+    if (this.btnSavePreferences) this.btnSavePreferences.addEventListener('click', () => {
+      this.preferences = this.readPreferencesForm();
+      this.savePreferences();
+      this.showToast('Preferensi disimpan', 'success');
+    });
+    if (this.btnApplyPreferences) this.btnApplyPreferences.addEventListener('click', () => this.applyPreferences());
+    if (this.btnProfileTheme) this.btnProfileTheme.addEventListener('click', () => {
+      this.toggleTheme();
+      this.updateProfileThemeLabel();
+    });
+
     // Settings
     if (this.btnClearData) {
       this.btnClearData.addEventListener('click', () => {
@@ -335,6 +466,7 @@ class InvoiceApp {
   applyTheme() {
     if (this.state.theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     else document.documentElement.removeAttribute('data-theme');
+    this.updateProfileThemeLabel();
   }
 
   // Form
@@ -374,6 +506,7 @@ class InvoiceApp {
     this.setVal('paymentUrl', s.calculations.paymentUrl);
 
     this.setVal('notes', s.notes);
+    this.populateProfilePreferences();
     this.setVal('paymentTerms', s.paymentTerms);
 
     if (s.signature && this.signaturePreview) {
