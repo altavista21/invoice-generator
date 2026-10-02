@@ -496,10 +496,6 @@ class InvoiceApp {
       if (this.signaturePlaceholder) this.signaturePlaceholder.hidden = false;
     }
 
-    // Template
-    this.templateRadios.forEach(r => { r.checked = r.value === (s.template || 'modern'); });
-    if (this.templateSelectFull) this.templateSelectFull.value = s.template || 'modern';
-    this.syncTemplateUI();
     this.updateDiscountPrefix();
   }
 
@@ -912,7 +908,7 @@ class InvoiceApp {
     this.populateForm();
     this.renderItemsList();
     this.renderPreview();
-    this.switchTab('history');
+    this.switchTab('editor');
     this.showToast('Invoice dimuat dari riwayat', 'success');
   }
 
