@@ -756,37 +756,66 @@ class InvoiceApp {
 
   async downloadPDF() {
     if (!this.validateRequired()) return;
-    const invNumber = this.state.invoice.number || 'INV-DRAFT';
-    const filename = `Invoice-${invNumber}.pdf`;
-    this.showToast('Menyiapkan PDF...', 'success');
+
+    const rawNumber = this.state.invoice.number || 'INV-DRAFT';
+    const safeNumber = rawNumber.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'INV-DRAFT';
+    const filename = `Invoice-${safeNumber}.pdf`;
     const target = this.invoicePreviewFull;
-    if (!target) { this.showToast('Preview tidak ditemukan', 'error'); return; }
+
+    if (!target) {
+      this.showToast('Preview tidak ditemukan', 'error');
+      return;
+    }
+    if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+      this.showToast('Library PDF belum dimuat. Coba refresh halaman.', 'error');
+      return;
+    }
+
+    this.showToast('Menyiapkan PDF...', 'success');
+    let clone = null;
+
     try {
-      if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') throw new Error('Library PDF belum dimuat');
-      // Ensure preview is rendered
+      // Pastikan data terbaru sudah masuk ke preview sebelum screenshot.
       this.renderPreview();
-      await new Promise(r => setTimeout(r, 100));
-      const clone = target.cloneNode(true);
-      clone.style.width = '794px';
-      clone.style.maxWidth = 'none';
-      clone.style.minHeight = '1123px';
-      clone.style.boxShadow = 'none';
-      clone.style.position = 'fixed';
-      clone.style.top = '-9999px';
-      clone.style.left = '-9999px';
-      clone.style.background = '#ffffff';
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      clone = target.cloneNode(true);
+      Object.assign(clone.style, {
+        width: '794px',
+        maxWidth: 'none',
+        minHeight: '1123px',
+        height: 'auto',
+        boxShadow: 'none',
+        position: 'fixed',
+        top: '0',
+        left: '-10000px',
+        zIndex: '-1',
+        background: '#ffffff'
+      });
       document.body.appendChild(clone);
-      const canvas = await html2canvas(clone, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 1024 });
-      document.body.removeChild(clone);
+
+      // Scale 1.5 lebih ramah RAM di HP tanpa membuat teks PDF buram.
+      const canvas = await html2canvas(clone, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1024,
+        imageTimeout: 10000
+      });
 
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // Render the long invoice across A4 pages without stretching or duplicating content.
       const pxPerMm = canvas.width / pageWidth;
       const pageHeightPx = Math.floor(pageHeight * pxPerMm);
+
+      // Potong canvas per tinggi A4. Tidak ada lagi pengurangan 297mm
+      // berdasarkan asumsi tinggi sebelumnya, sehingga halaman terakhir
+      // tidak bergeser/terduplikasi.
       let offsetY = 0;
       let pageIndex = 0;
 
@@ -798,8 +827,7 @@ class InvoiceApp {
 
         const ctx = pageCanvas.getContext('2d');
         if (!ctx) throw new Error('Canvas PDF tidak tersedia');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
         ctx.drawImage(
           canvas,
           0, offsetY, canvas.width, sliceHeightPx,
@@ -807,9 +835,10 @@ class InvoiceApp {
         );
 
         if (pageIndex > 0) pdf.addPage();
-        const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
+
+        const pageImg = pageCanvas.toDataURL('image/jpeg', 0.92);
         const sliceHeightMm = sliceHeightPx / pxPerMm;
-        pdf.addImage(pageImg, 'JPEG', 0, 0, pageWidth, sliceHeightMm);
+        pdf.addImage(pageImg, 'JPEG', 0, 0, pageWidth, sliceHeightMm, undefined, 'FAST');
 
         offsetY += sliceHeightPx;
         pageIndex++;
@@ -818,8 +847,10 @@ class InvoiceApp {
       pdf.save(filename);
       this.showToast(`Berhasil mengunduh ${filename}`, 'success');
     } catch (err) {
-      console.error(err);
-      this.showToast('Gagal membuat PDF: ' + err.message, 'error');
+      console.error('PDF export error:', err);
+      this.showToast('Gagal membuat PDF: ' + (err?.message || 'kesalahan tidak diketahui'), 'error');
+    } finally {
+      if (clone?.parentNode) clone.parentNode.removeChild(clone);
     }
   }
 
